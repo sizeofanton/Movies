@@ -13,5 +13,6 @@
         android:layout_height="match_parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="22dp" />
+        tools:layout_editor_absoluteY="22dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
