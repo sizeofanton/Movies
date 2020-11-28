@@ -26,4 +26,28 @@
 
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="placeholder">Пёс Киноман</string>
+
+    <string name="watch">Смотреть</string>
+    <string name="year">Год</string>
+    <string name="genre">Жанр</string>
+    <string name="studio">Студия</string>
+
+    <!-- Accessibility images -->
+    <string name="description_movie_in_4k_format">Movie in 4k format</string>
+    <string name="description_movie_poster">Movie poster</string>
+    <string name="description_back_to_previous_page">Back to previous page</string>
+    <string name="description_add_movie_to_favorite">Add movie to favorite</string>
+    <string name="description_actor_photo">Photo of the actor</string>
+
+    <!-- Mock UI Strings -->
+    <string name="mock_year">2018</string>
+    <string name="mock_genre">Action</string>
+    <string name="mock_film">Aquaman</string>
+    <string name="mock_description">In 1985 Maine, lighthouse keeper Thomas Curry rescues Atlanna,
+        the queen of the underwater nation of Atlantis, during a storm. They eventually fall in love
+        and have a son named Arthur, who is born with the power to communicate with marine lifeforms.
+    </string>
+    <string name="mock_studio">Warner Bros.</string>
+    <string name="mock_actor_lastname">Momoa</string>
+    <string name="mock_actor_firstname">Jason</string>
 </resources>

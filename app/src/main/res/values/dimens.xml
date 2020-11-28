@@ -19,5 +19,7 @@
     <dimen name="tv_show_card_height">150dp</dimen>
     <dimen name="tv_show_card_margin_top">19dp</dimen>
 
+    <!-- Actor Card Item -->
+    <dimen name="actor_card_margin_end">10dp</dimen>
 
 </resources>
