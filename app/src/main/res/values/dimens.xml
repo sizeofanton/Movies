@@ -22,4 +22,7 @@
     <!-- Actor Card Item -->
     <dimen name="actor_card_margin_end">10dp</dimen>
 
+    <!-- Rounded Button -->
+    <dimen name="rounded_button_radius">20dp</dimen>
+
 </resources>

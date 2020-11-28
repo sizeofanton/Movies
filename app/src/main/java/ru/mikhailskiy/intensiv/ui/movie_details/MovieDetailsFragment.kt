@@ -19,17 +19,6 @@ class MovieDetailsFragment : Fragment() {
         GroupAdapter<GroupieViewHolder>()
     }
 
-    private var favoriteState = false
-        set(bool) {
-            val icon = if (bool) {
-                resources.getDrawable(R.drawable.ic_favorite_red, activity?.theme)
-            } else {
-                resources.getDrawable(R.drawable.ic_favorite, activity?.theme)
-            }
-            favorite.setImageDrawable(icon)
-            field = bool
-        }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -65,11 +54,7 @@ class MovieDetailsFragment : Fragment() {
         }
 
         button_watch.setOnClickListener {
-            // TODO Перенаправление, но куда?
-        }
-
-        favorite.setOnClickListener {
-            favoriteState = !favoriteState
+            // TODO Перенаправление на трейлер
         }
     }
 }
