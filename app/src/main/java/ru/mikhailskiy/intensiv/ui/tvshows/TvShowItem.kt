@@ -16,7 +16,7 @@ class TvShowItem(
 
     override fun bind(viewHolder: GroupieViewHolder, position: Int) {
         viewHolder.description.text = content.title
-        viewHolder.movie_rating.rating = content.rating
+        viewHolder.show_rating.rating = content.rating
         viewHolder.image_preview.setOnClickListener {
             onClick.invoke(content)
         }

@@ -5,41 +5,56 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.squareup.picasso.Picasso
+import com.xwray.groupie.GroupAdapter
+import com.xwray.groupie.GroupieViewHolder
+import kotlinx.android.synthetic.main.movie_details_fragment.*
 import ru.mikhailskiy.intensiv.R
-
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+import ru.mikhailskiy.intensiv.data.MockRepository
+import ru.mikhailskiy.intensiv.data.MovieDetailed
 
 class MovieDetailsFragment : Fragment() {
 
-    private var param1: String? = null
-    private var param2: String? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
+    private val adapter by lazy {
+        GroupAdapter<GroupieViewHolder>()
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.movie_details_fragment, container, false)
     }
 
-    companion object {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        actors.adapter = adapter.apply { addAll(listOf()) }
+        MockRepository.getMovieDetailed().also {
+            setupUI(it)
+        }
 
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            MovieDetailsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    }
+
+    private fun setupUI(details: MovieDetailed) {
+        title.text = details.title
+        movie_rating.rating = details.rating
+        Picasso.get()
+                .load(details.posterUrl)
+                .fit()
+                .into(movie_poster)
+        description.text = details.description
+        studio.text = details.studioName
+        genre.text = details.genre
+        year.text = year.text
+        val actorsList = details.actorsList?.map { ActorItem(it) }
+        adapter.apply { actorsList?.let { addAll(it) } }
+
+        button_back.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
+
+        button_watch.setOnClickListener {
+            // TODO Перенаправление на трейлер
+        }
     }
 }

@@ -24,5 +24,8 @@
 
     <color name="mainFeedBackground">@color/colorPrimary</color>
 
+    <color name="buttonWatchBackground">#697380</color>
+    <color name="descriptionTextColor">#BFC3C7</color>
+
 
 </resources>
