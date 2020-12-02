@@ -5,11 +5,11 @@ import com.xwray.groupie.kotlinandroidextensions.GroupieViewHolder
 import com.xwray.groupie.kotlinandroidextensions.Item
 import kotlinx.android.synthetic.main.item_with_text.*
 import ru.mikhailskiy.intensiv.R
-import ru.mikhailskiy.intensiv.data.Movie
+import ru.mikhailskiy.intensiv.data.movie.Movie
 
 class MovieItem(
-    private val content: Movie,
-    private val onClick: (movie: Movie) -> Unit
+        private val content: Movie,
+        private val onClick: (movie: Movie) -> Unit
 ) : Item() {
 
     override fun getLayout() = R.layout.item_with_text
@@ -23,7 +23,8 @@ class MovieItem(
 
         // TODO Получать из модели
         Picasso.get()
-            .load("https://m.media-amazon.com/images/M/MV5BYTk3MDljOWQtNGI2My00OTEzLTlhYjQtOTQ4ODM2MzUwY2IwXkEyXkFqcGdeQXVyNTIzOTk5ODM@._V1_.jpg")
+            .load(content.getPoster())
+            .fit()
             .into(viewHolder.image_preview)
     }
 }

@@ -5,16 +5,21 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import kotlinx.android.synthetic.main.tv_shows_fragment.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import ru.mikhailskiy.intensiv.BuildConfig
+import ru.mikhailskiy.intensiv.MovieFinderApp
 import ru.mikhailskiy.intensiv.R
-import ru.mikhailskiy.intensiv.data.MockRepository
-import ru.mikhailskiy.intensiv.data.Movie
+import ru.mikhailskiy.intensiv.data.tv_show.TvShow
+import ru.mikhailskiy.intensiv.data.tv_show.TvShowResponse
+import ru.mikhailskiy.intensiv.network.MovieApiClient
+import timber.log.Timber
 
 
 class TvShowsFragment : Fragment() {
@@ -28,7 +33,6 @@ class TvShowsFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.tv_shows_fragment, container, false)
     }
 
@@ -37,20 +41,31 @@ class TvShowsFragment : Fragment() {
 
         tv_shows_recycler_view.adapter = adapter.apply { addAll(listOf()) }
 
-        val tvShowsList =  MockRepository.getTvShows().map {
-            TvShowItem(it) { movie ->
-                openTvShowDetail(
-                    movie
-                )
-            }
-        }
+        MovieApiClient.apiClient
+            .getPopularShow(API_KEY)
+            .enqueue(object: Callback<TvShowResponse> {
+                override fun onResponse(
+                        call: Call<TvShowResponse>,
+                        response: Response<TvShowResponse>
+                ) {
+                    val shows = response.body()?.results
+                    shows?.let {
+                        val tvShowsItems = it.map { tvShow ->
+                            TvShowItem(tvShow) {
+                                openTvShowDetail(tvShow)
+                            }
+                        }
+                        tv_shows_recycler_view.adapter = adapter.apply { addAll(tvShowsItems) }
+                    }
+                }
 
-        adapter.apply { addAll(tvShowsList) }
-
-
+                override fun onFailure(call: Call<TvShowResponse>, error: Throwable) {
+                    Timber.e(error)
+                }
+            })
     }
 
-    private fun openTvShowDetail(movie: Movie) {
+    private fun openTvShowDetail(show: TvShow) {
         val options = navOptions {
             anim {
                 enter = R.anim.slide_in_right
@@ -61,7 +76,12 @@ class TvShowsFragment : Fragment() {
         }
 
         val bundle = Bundle()
-        bundle.putString("title", movie.title)
+        bundle.putInt("id", show.id)
+        bundle.putString("type", "tv_show")
         findNavController().navigate(R.id.movie_details_fragment, bundle, options)
+    }
+
+    companion object {
+        private val API_KEY = BuildConfig.THE_MOVIE_DATABASE_API
     }
 }

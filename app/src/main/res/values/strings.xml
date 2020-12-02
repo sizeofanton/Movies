@@ -7,6 +7,7 @@
     <string name="recommended">Рекомендуем</string>
     <string name="popular">Популярные</string>
     <string name="upcoming">Новинки</string>
+    <string name="now_playing">Сейчас в кино</string>
 
     <string name="home">Главная</string>
 
@@ -50,4 +51,5 @@
     <string name="mock_studio">Warner Bros.</string>
     <string name="mock_actor_lastname">Momoa</string>
     <string name="mock_actor_firstname">Jason</string>
+    <string name="no_image_url">https://www.allianceplast.com/wp-content/uploads/2017/11/no-image.png</string>
 </resources>

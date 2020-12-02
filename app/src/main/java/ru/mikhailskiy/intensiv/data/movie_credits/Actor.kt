@@ -1,4 +1,4 @@
-package ru.mikhailskiy.intensiv.data
+package ru.mikhailskiy.intensiv.data.movie_credits
 
 data class Actor(
     val photoUrl: String,

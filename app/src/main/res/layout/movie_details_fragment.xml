@@ -90,6 +90,7 @@
         android:layout_marginStart="@dimen/material_margin_normal"
         android:layout_marginTop="@dimen/material_margin_normal"
         android:layout_marginEnd="@dimen/material_margin_normal"
+        android:scrollbars="vertical"
         android:text="@string/mock_description"
         android:textAppearance="@style/TextViewDetailDescription"
         app:layout_constraintEnd_toEndOf="parent"
