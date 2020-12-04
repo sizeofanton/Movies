@@ -3,6 +3,7 @@ package ru.mikhailskiy.intensiv
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
@@ -22,6 +23,10 @@ class MainActivity : AppCompatActivity() {
         val navController = host.navController
 
         setupBottomNavMenu(navController)
+        MovieFinderApp.locale = ConfigurationCompat
+                .getLocales(resources.configuration)[0]
+                .toString()
+                .replace("_", "-")
     }
 
     private fun setupBottomNavMenu(navController: NavController) {

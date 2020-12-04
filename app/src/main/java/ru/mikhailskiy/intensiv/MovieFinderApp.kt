@@ -1,6 +1,8 @@
 package ru.mikhailskiy.intensiv
 
 import android.app.Application
+import android.os.Build
+import androidx.core.os.ConfigurationCompat
 import timber.log.Timber
 
 class MovieFinderApp : Application() {
@@ -23,5 +25,7 @@ class MovieFinderApp : Application() {
     companion object {
         var instance: MovieFinderApp? = null
             private set
+
+        lateinit var locale: String
     }
 }

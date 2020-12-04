@@ -5,11 +5,11 @@ import com.xwray.groupie.kotlinandroidextensions.GroupieViewHolder
 import com.xwray.groupie.kotlinandroidextensions.Item
 import kotlinx.android.synthetic.main.tv_show_card.*
 import ru.mikhailskiy.intensiv.R
-import ru.mikhailskiy.intensiv.data.Movie
+import ru.mikhailskiy.intensiv.data.tv_show.TvShow
 
 class TvShowItem(
-    private val content: Movie,
-    private val onClick: (movie: Movie) -> Unit
+        private val content: TvShow,
+        private val onClick: (tvShow: TvShow) -> Unit
 ): Item() {
 
     override fun getLayout(): Int = R.layout.tv_show_card
@@ -22,7 +22,8 @@ class TvShowItem(
         }
 
         Picasso.get()
-            .load("https://2x2tv.ru/upload/iblock/4af/4afce4e71d9ed521b7b17d71c0b1dd7d.jpg")
+            .load(content.getBackdrop())
+            .fit()
             .into(viewHolder.image_preview)
     }
 

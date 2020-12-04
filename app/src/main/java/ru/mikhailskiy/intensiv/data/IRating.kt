@@ -1,9 +1,7 @@
 package ru.mikhailskiy.intensiv.data
 
-open class Movie(
-    open var title: String? = "",
-    open var voteAverage: Double = 0.0
-) {
+interface IRating {
+    val voteAverage: Double
     val rating: Float
         get() = voteAverage.div(2).toFloat()
 }

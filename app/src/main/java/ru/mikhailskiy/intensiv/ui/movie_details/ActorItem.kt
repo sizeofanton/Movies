@@ -6,7 +6,7 @@ import com.xwray.groupie.kotlinandroidextensions.Item
 import jp.wasabeef.picasso.transformations.CropCircleTransformation
 import kotlinx.android.synthetic.main.actor_card.*
 import ru.mikhailskiy.intensiv.R
-import ru.mikhailskiy.intensiv.data.Actor
+import ru.mikhailskiy.intensiv.data.movie_credits.Actor
 
 class ActorItem(
     private val content: Actor
