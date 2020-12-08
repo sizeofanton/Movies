@@ -4,24 +4,22 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
+import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.movie_details_fragment.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import ru.mikhailskiy.intensiv.BuildConfig
 import ru.mikhailskiy.intensiv.R
 import ru.mikhailskiy.intensiv.data.movie.MovieDetails
 import ru.mikhailskiy.intensiv.data.movie_credits.Actor
 import ru.mikhailskiy.intensiv.data.movie_credits.CastMember
-import ru.mikhailskiy.intensiv.data.movie_credits.MovieCredits
 import ru.mikhailskiy.intensiv.data.tv_show.TvShowDetails
+import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
 import ru.mikhailskiy.intensiv.network.MovieApiClient
 import ru.mikhailskiy.intensiv.util.DateParser
 import ru.mikhailskiy.intensiv.util.GenreParser
@@ -32,6 +30,8 @@ class MovieDetailsFragment : Fragment() {
     private val adapter by lazy {
         GroupAdapter<GroupieViewHolder>()
     }
+
+    private val subscriptions = CompositeDisposable()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,44 +47,32 @@ class MovieDetailsFragment : Fragment() {
         button_back.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
-        when (arguments?.getString("type")) {
-            "tv_show" -> {
-                val id = requireArguments().getInt("id")
-                MovieApiClient.apiClient
+        when (arguments?.getString(getString(R.string.type))) {
+            getString(R.string.type_show) -> {
+                val id = requireArguments().getInt(getString(R.string.id))
+                val tvShowDetailsSubscription = MovieApiClient.apiClient
                     .getShowDescription(id, API_KEY)
-                    .enqueue(object: Callback<TvShowDetails>{
-                        override fun onResponse(
-                            call: Call<TvShowDetails>,
-                            response: Response<TvShowDetails>
-                        ) {
-                            val description = response.body()
-                            description?.let {
-                                setupTvShow(it)
-                            }
-                        }
-
-                        override fun onFailure(call: Call<TvShowDetails>, error: Throwable) {
-                            Timber.d(error)
-                        }
+                    .useDefaultNetworkThreads()
+                    .subscribe({ details ->
+                        setupTvShow(details)
+                    }, { throwable->
+                        Timber.d(throwable)
                     })
+                subscriptions.add(tvShowDetailsSubscription)
             }
 
-            "movie" -> {
-                val id = requireArguments().getInt("id")
-                MovieApiClient.apiClient
-                    .getMovieDetails(id, API_KEY)
-                    .enqueue(object: Callback<MovieDetails>{
-                        override fun onResponse(call: Call<MovieDetails>, response: Response<MovieDetails>) {
-                            val description = response.body()
-                            description?.let {
-                                setupMovie(description, id)
-                            }
-                        }
+            getString(R.string.type_movie) -> {
+                val id = requireArguments().getInt(getString(R.string.id))
 
-                        override fun onFailure(call: Call<MovieDetails>, error: Throwable) {
-                            Timber.d(error)
-                        }
+                val movieDetailSubscription = MovieApiClient.apiClient
+                    .getMovieDetails(id, API_KEY)
+                    .useDefaultNetworkThreads()
+                    .subscribe({ details ->
+                        setupMovie(details, id)
+                    }, { throwable ->
+                        Timber.d(throwable)
                     })
+                subscriptions.add(movieDetailSubscription)
             }
 
         }
@@ -135,20 +123,17 @@ class MovieDetailsFragment : Fragment() {
         }
         adapter.clear()
 
-        MovieApiClient.apiClient.getMovieCredits(id, API_KEY)
-                .enqueue(object: Callback<MovieCredits>{
-                    override fun onResponse(call: Call<MovieCredits>, response: Response<MovieCredits>) {
-                        val credits = response.body()
-                        credits?.let {
-                            val topCast = it.cast.sortedByDescending { it.popularity }
-                            setupCast(topCast)
-                        }
-                    }
+        val creditSubscription = MovieApiClient.apiClient
+            .getMovieCredits(id, API_KEY)
+            .useDefaultNetworkThreads()
+            .subscribe({ response ->
+                val topCast = response.cast.sortedByDescending { it.popularity }
+                setupCast(topCast)
+            },{ throwable ->
+                Timber.d(throwable)
+            })
 
-                    override fun onFailure(call: Call<MovieCredits>, error: Throwable) {
-                        Timber.d(error)
-                    }
-                })
+        subscriptions.add(creditSubscription)
 
     }
 
@@ -160,15 +145,20 @@ class MovieDetailsFragment : Fragment() {
                     firstName = actor.name.split(" ")[0],
                     lastName = actor.name.split(" ")[1],
                     photoUrl = if (actor.profilePath != null) {
-                        "${MovieApiClient.IMAGE_BASE_URL}${actor.profilePath}"
+                        "${BuildConfig.API_IMAGE_URL}${actor.profilePath}"
                     } else {
-                        getString(R.string.no_image_url)
+                        getString(R.string.placeholder_url)
                     }
                 )
             )
         }
         val actorsItems = actors.map { ActorItem(it) }
         adapter.apply { addAll(actorsItems) }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        //subscriptions.clear()
     }
 
     companion object {

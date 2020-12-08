@@ -18,6 +18,8 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField 'String', 'THE_MOVIE_DATABASE_API', keystoreProperties['THE_MOVIE_DATABASE_API']
+        buildConfigField 'String', 'API_URL', "\"https://api.themoviedb.org/3/\""
+        buildConfigField 'String', 'API_IMAGE_URL', "\"https://image.tmdb.org/t/p/w500\""
     }
     buildTypes {
         release {

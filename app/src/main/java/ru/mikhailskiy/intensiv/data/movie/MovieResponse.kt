@@ -1,7 +1,6 @@
 package ru.mikhailskiy.intensiv.data.movie
 
 import com.google.gson.annotations.SerializedName
-import ru.mikhailskiy.intensiv.data.movie.Movie
 
 data class MovieResponse(
     val page: Int,
