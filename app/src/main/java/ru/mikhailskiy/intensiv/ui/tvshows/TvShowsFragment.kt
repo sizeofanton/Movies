@@ -11,11 +11,13 @@ import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.tv_shows_fragment.*
-import ru.mikhailskiy.intensiv.BuildConfig
 import ru.mikhailskiy.intensiv.R
 import ru.mikhailskiy.intensiv.data.tv_show.TvShow
+import ru.mikhailskiy.intensiv.extension.hide
+import ru.mikhailskiy.intensiv.extension.show
 import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
 import ru.mikhailskiy.intensiv.network.MovieApiClient
+import ru.mikhailskiy.intensiv.util.BundleProperties
 import timber.log.Timber
 
 
@@ -40,9 +42,10 @@ class TvShowsFragment : Fragment() {
         tv_shows_recycler_view.adapter = adapter.apply { addAll(listOf()) }
 
         val subscription = MovieApiClient.apiClient
-            .getPopularShow(apiKey = API_KEY)
+            .getPopularShow()
             .useDefaultNetworkThreads()
-            .doOnSuccess { progress_bar.visibility = View.INVISIBLE }
+            .doOnSubscribe { progress_bar.show() }
+            .doOnSuccess { progress_bar.hide() }
             .subscribe({ response ->
                 val shows = response.results
                 val items = shows.map { show->
@@ -52,7 +55,7 @@ class TvShowsFragment : Fragment() {
                 }
                 tv_shows_recycler_view.adapter = adapter.apply { addAll(items) }
             }, { throwable ->
-                Timber.d(throwable)
+                Timber.e(throwable)
             })
 
         subscriptions.add(subscription)
@@ -69,13 +72,9 @@ class TvShowsFragment : Fragment() {
         }
 
         val bundle = Bundle()
-        bundle.putInt(getString(R.string.id), show.id)
-        bundle.putString(getString(R.string.type), getString(R.string.type_show))
+        bundle.putInt(BundleProperties.ID_KEY, show.id)
+        bundle.putString(BundleProperties.TYPE_KEY, BundleProperties.TYPE_SHOW)
         findNavController().navigate(R.id.movie_details_fragment, bundle, options)
-    }
-
-    companion object {
-        private val API_KEY = BuildConfig.THE_MOVIE_DATABASE_API
     }
 
     override fun onDestroy() {

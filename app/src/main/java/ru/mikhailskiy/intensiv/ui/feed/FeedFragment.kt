@@ -8,25 +8,22 @@ import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.kotlinandroidextensions.GroupieViewHolder
-import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function3
 import io.reactivex.subjects.PublishSubject
-import io.reactivex.subjects.Subject
 import kotlinx.android.synthetic.main.feed_fragment.*
 import kotlinx.android.synthetic.main.feed_header.*
-import kotlinx.android.synthetic.main.search_toolbar.view.*
-import ru.mikhailskiy.intensiv.BuildConfig
 import ru.mikhailskiy.intensiv.R
 import ru.mikhailskiy.intensiv.data.MovieData
 import ru.mikhailskiy.intensiv.data.movie.Movie
 import ru.mikhailskiy.intensiv.data.movie.MovieResponse
+import ru.mikhailskiy.intensiv.extension.hide
+import ru.mikhailskiy.intensiv.extension.show
 import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
 import ru.mikhailskiy.intensiv.network.MovieApiClient
-import ru.mikhailskiy.intensiv.ui.afterTextChanged
+import ru.mikhailskiy.intensiv.util.BundleProperties
 import timber.log.Timber
-import java.util.concurrent.TimeUnit
 
 class FeedFragment : Fragment() {
 
@@ -52,21 +49,13 @@ class FeedFragment : Fragment() {
         movies_recycler_view.layoutManager = LinearLayoutManager(context)
         movies_recycler_view.adapter = adapter.apply { addAll(listOf()) }
 
-        val searchObservable: Observable<String> = Observable.create<String> { emitter ->
-            search_toolbar.search_edit_text.afterTextChanged { editable ->
-                emitter.onNext(editable.toString())
-            }
-        }
+        val searchObservable = search_toolbar.textChangedObservable
 
         val searchSubject: PublishSubject<String> = PublishSubject.create()
         searchObservable.subscribe(searchSubject)
-        val searchSubscription = searchSubject
-            .map { it.replace(" ", "") }
-            .filter { it.length > 3}
-            .delay(500, TimeUnit.MILLISECONDS)
-            .subscribe { query ->
-                openSearch(query)
-            }
+        val searchSubscription = searchSubject.subscribe { query ->
+            openSearch(query)
+        }
         subscriptions.add(searchSubscription)
 
 
@@ -88,7 +77,8 @@ class FeedFragment : Fragment() {
                )
            })
             .useDefaultNetworkThreads()
-            .doOnSuccess { progress_bar.visibility = View.INVISIBLE }
+            .doOnSubscribe { progress_bar.show() }
+            .doOnTerminate { progress_bar.hide() }
             .subscribe({ movieData ->
                 val moviesList = listOf(
                     MainCardContainer(R.string.now_playing, movieData.nowPlayingMovies.map {
@@ -103,7 +93,7 @@ class FeedFragment : Fragment() {
                 )
                 adapter.apply { addAll(moviesList) }
             }, { throwable ->
-                Timber.d(throwable)
+                Timber.e(throwable)
             })
 
         subscriptions.add(movieDataSubscription)
@@ -121,8 +111,8 @@ class FeedFragment : Fragment() {
         }
 
         val bundle = Bundle()
-        bundle.putInt(getString(R.string.id), movie.id)
-        bundle.putString(getString(R.string.type), getString(R.string.type_movie))
+        bundle.putInt(BundleProperties.ID_KEY, movie.id)
+        bundle.putString(BundleProperties.TYPE_KEY, BundleProperties.TYPE_MOVIE)
         findNavController().navigate(R.id.movie_details_fragment, bundle, options)
     }
 
@@ -137,7 +127,7 @@ class FeedFragment : Fragment() {
         }
 
         val bundle = Bundle()
-        bundle.putString("search", searchText)
+        bundle.putString(BundleProperties.SEARCH_KEY, searchText)
         findNavController().navigate(R.id.search_dest, bundle, options)
     }
 

@@ -19,10 +19,13 @@ import ru.mikhailskiy.intensiv.data.movie.MovieDetails
 import ru.mikhailskiy.intensiv.data.movie_credits.Actor
 import ru.mikhailskiy.intensiv.data.movie_credits.CastMember
 import ru.mikhailskiy.intensiv.data.tv_show.TvShowDetails
+import ru.mikhailskiy.intensiv.extension.hide
+import ru.mikhailskiy.intensiv.extension.show
 import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
 import ru.mikhailskiy.intensiv.network.MovieApiClient
 import ru.mikhailskiy.intensiv.util.DateParser
 import ru.mikhailskiy.intensiv.util.GenreParser
+import ru.mikhailskiy.intensiv.util.BundleProperties
 import timber.log.Timber
 
 class MovieDetailsFragment : Fragment() {
@@ -40,37 +43,72 @@ class MovieDetailsFragment : Fragment() {
         return inflater.inflate(R.layout.movie_details_fragment, container, false)
     }
 
+
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val viewsList = listOf<View>(
+            movie_poster,
+            year,
+            genre,
+            title,
+            button_watch,
+            movie_rating,
+            iv_4k,
+            description,
+            button_back,
+            tv_year,
+            tv_genre,
+            tv_studio,
+            actors,
+            studio,
+            favorite
+        ).apply { hide() }
         description.movementMethod = ScrollingMovementMethod()
         actors.adapter = adapter.apply { addAll(listOf()) }
         button_back.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
-        when (arguments?.getString(getString(R.string.type))) {
-            getString(R.string.type_show) -> {
-                val id = requireArguments().getInt(getString(R.string.id))
+        when (arguments?.getString(BundleProperties.TYPE_KEY)) {
+            BundleProperties.TYPE_SHOW -> {
+                val id = requireArguments().getInt(BundleProperties.ID_KEY)
                 val tvShowDetailsSubscription = MovieApiClient.apiClient
-                    .getShowDescription(id, API_KEY)
+                    .getShowDescription(id)
                     .useDefaultNetworkThreads()
+                    .doOnSubscribe {
+                        progress_bar.show()
+                        viewsList.hide()
+                    }
+                    .doOnTerminate {
+                        progress_bar.hide()
+                        viewsList.show()
+                    }
                     .subscribe({ details ->
                         setupTvShow(details)
                     }, { throwable->
-                        Timber.d(throwable)
+                        Timber.e(throwable)
                     })
                 subscriptions.add(tvShowDetailsSubscription)
             }
 
-            getString(R.string.type_movie) -> {
-                val id = requireArguments().getInt(getString(R.string.id))
+            BundleProperties.TYPE_MOVIE -> {
+                val id = requireArguments().getInt(BundleProperties.ID_KEY)
 
                 val movieDetailSubscription = MovieApiClient.apiClient
-                    .getMovieDetails(id, API_KEY)
+                    .getMovieDetails(id)
                     .useDefaultNetworkThreads()
+                    .doOnSubscribe {
+                        progress_bar.show()
+                        viewsList.hide()
+                    }
+                    .doOnTerminate {
+                        progress_bar.hide()
+                        viewsList.show()
+                    }
                     .subscribe({ details ->
                         setupMovie(details, id)
                     }, { throwable ->
-                        Timber.d(throwable)
+                        Timber.e(throwable)
                     })
                 subscriptions.add(movieDetailSubscription)
             }
@@ -124,13 +162,13 @@ class MovieDetailsFragment : Fragment() {
         adapter.clear()
 
         val creditSubscription = MovieApiClient.apiClient
-            .getMovieCredits(id, API_KEY)
+            .getMovieCredits(id)
             .useDefaultNetworkThreads()
             .subscribe({ response ->
                 val topCast = response.cast.sortedByDescending { it.popularity }
                 setupCast(topCast)
             },{ throwable ->
-                Timber.d(throwable)
+                Timber.e(throwable)
             })
 
         subscriptions.add(creditSubscription)
@@ -147,7 +185,7 @@ class MovieDetailsFragment : Fragment() {
                     photoUrl = if (actor.profilePath != null) {
                         "${BuildConfig.API_IMAGE_URL}${actor.profilePath}"
                     } else {
-                        getString(R.string.placeholder_url)
+                        Actor.placeholderUrl
                     }
                 )
             )
@@ -158,10 +196,6 @@ class MovieDetailsFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        //subscriptions.clear()
-    }
-
-    companion object {
-        private const val API_KEY = BuildConfig.THE_MOVIE_DATABASE_API
+        subscriptions.clear()
     }
 }

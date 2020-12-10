@@ -7,9 +7,13 @@ import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
+import io.reactivex.Observable
 import kotlinx.android.synthetic.main.search_toolbar.view.*
 import ru.mikhailskiy.intensiv.R
+import java.util.concurrent.TimeUnit
 
+private const val MIN_QUERY_LENGTH = 3
+private const val EDIT_FINISH_DELAY = 1500L
 class SearchBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -20,6 +24,15 @@ class SearchBar @JvmOverloads constructor(
 
     private var hint: String = ""
     private var isCancelVisible: Boolean = true
+
+    val textChangedObservable: Observable<String> = Observable.create<String> { emitter ->
+        editText.afterTextChanged { editable ->
+            emitter.onNext(editable.toString())
+        }
+    }
+        .map { it.trim() }
+        .filter { it.length > MIN_QUERY_LENGTH }
+        .delay(EDIT_FINISH_DELAY, TimeUnit.MILLISECONDS)
 
     init {
         LayoutInflater.from(context).inflate(R.layout.search_toolbar, this)

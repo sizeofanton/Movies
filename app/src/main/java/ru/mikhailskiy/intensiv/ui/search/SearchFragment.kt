@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
-import androidx.recyclerview.widget.GridLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
 import kotlinx.android.synthetic.main.feed_header.*
@@ -16,6 +15,7 @@ import ru.mikhailskiy.intensiv.R
 import ru.mikhailskiy.intensiv.data.movie.Movie
 import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
 import ru.mikhailskiy.intensiv.network.MovieApiClient
+import ru.mikhailskiy.intensiv.util.BundleProperties
 import timber.log.Timber
 
 
@@ -54,7 +54,7 @@ class SearchFragment : Fragment() {
                     println(movies)
                     adapter.apply { addAll(movies) }
                 }, { throwable ->
-                    Timber.d(throwable)
+                    Timber.e(throwable)
                 })
         }
     }
@@ -70,8 +70,8 @@ class SearchFragment : Fragment() {
         }
 
         val bundle = Bundle()
-        bundle.putInt(getString(R.string.id), movie.id)
-        bundle.putString(getString(R.string.type), getString(R.string.type_movie))
+        bundle.putInt(BundleProperties.ID_KEY, movie.id)
+        bundle.putString(BundleProperties.TYPE_KEY, BundleProperties.TYPE_MOVIE)
         findNavController().navigate(R.id.movie_details_fragment, bundle, options)
     }
 }
