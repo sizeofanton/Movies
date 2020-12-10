@@ -8,18 +8,21 @@ import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.kotlinandroidextensions.GroupieViewHolder
+import io.reactivex.Single
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.functions.Function3
+import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.feed_fragment.*
 import kotlinx.android.synthetic.main.feed_header.*
-import kotlinx.android.synthetic.main.search_toolbar.view.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import ru.mikhailskiy.intensiv.BuildConfig
 import ru.mikhailskiy.intensiv.R
+import ru.mikhailskiy.intensiv.data.MovieData
 import ru.mikhailskiy.intensiv.data.movie.Movie
 import ru.mikhailskiy.intensiv.data.movie.MovieResponse
+import ru.mikhailskiy.intensiv.extension.hide
+import ru.mikhailskiy.intensiv.extension.show
+import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
 import ru.mikhailskiy.intensiv.network.MovieApiClient
-import ru.mikhailskiy.intensiv.ui.afterTextChanged
+import ru.mikhailskiy.intensiv.util.BundleProperties
 import timber.log.Timber
 
 class FeedFragment : Fragment() {
@@ -27,6 +30,8 @@ class FeedFragment : Fragment() {
     private val adapter by lazy {
         GroupAdapter<GroupieViewHolder>()
     }
+
+    private val subscriptions = CompositeDisposable()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,91 +49,55 @@ class FeedFragment : Fragment() {
         movies_recycler_view.layoutManager = LinearLayoutManager(context)
         movies_recycler_view.adapter = adapter.apply { addAll(listOf()) }
 
-        search_toolbar.search_edit_text.afterTextChanged {
-            Timber.d(it.toString())
-            if (it.toString().length > 3) {
-                openSearch(it.toString())
-            }
+        val searchObservable = search_toolbar.textChangedObservable
+
+        val searchSubject: PublishSubject<String> = PublishSubject.create()
+        searchObservable.subscribe(searchSubject)
+        val searchSubscription = searchSubject.subscribe { query ->
+            openSearch(query)
         }
+        subscriptions.add(searchSubscription)
 
-        MovieApiClient.apiClient
-            .getNowPlayingMovies(API_KEY)
-            .enqueue(object: Callback<MovieResponse>{
-                override fun onResponse(
-                        call: Call<MovieResponse>,
-                        response: Response<MovieResponse>
-                ) {
-                    val movies = response.body()?.results
-                    movies?.let {
-                        val moviesList = listOf(
-                            MainCardContainer(
-                                R.string.now_playing,
-                                it.map { movie ->
-                                    MovieItem(movie) {
-                                        openMovieDetails(it)
-                                    }
-                                }
-                            )
-                        )
-                        adapter.apply { addAll(moviesList) }
-                    }
-                }
 
-                override fun onFailure(call: Call<MovieResponse>, error: Throwable) {
-                    Timber.d(error)
-                }
+        val nowPlayingObservable = MovieApiClient.apiClient
+            .getNowPlayingMovies()
+
+        val upcomingObservable = MovieApiClient.apiClient
+            .getUpcomingMovies()
+
+        val popularObservable = MovieApiClient.apiClient
+            .getPopularMovies()
+
+        val movieDataSubscription = Single.zip(nowPlayingObservable, upcomingObservable, popularObservable,
+           Function3<MovieResponse, MovieResponse, MovieResponse, MovieData>{ now, upcoming, popular ->
+               MovieData(
+                   nowPlayingMovies = now.results,
+                   upcomingMovies = upcoming.results,
+                   popularMovies = popular.results
+               )
+           })
+            .useDefaultNetworkThreads()
+            .doOnSubscribe { progress_bar.show() }
+            .doOnTerminate { progress_bar.hide() }
+            .subscribe({ movieData ->
+                val moviesList = listOf(
+                    MainCardContainer(R.string.now_playing, movieData.nowPlayingMovies.map {
+                        MovieItem(it) {openMovieDetails(it)}
+                    }),
+                    MainCardContainer(R.string.upcoming, movieData.upcomingMovies.map {
+                        MovieItem(it) {openMovieDetails(it)}
+                    }),
+                    MainCardContainer(R.string.popular, movieData.popularMovies.map {
+                        MovieItem(it) {openMovieDetails(it)}
+                    })
+                )
+                adapter.apply { addAll(moviesList) }
+            }, { throwable ->
+                Timber.e(throwable)
             })
 
+        subscriptions.add(movieDataSubscription)
 
-        MovieApiClient.apiClient
-            .getUpcomingMovies(API_KEY)
-            .enqueue(object: Callback<MovieResponse>{
-                override fun onResponse(call: Call<MovieResponse>, response: Response<MovieResponse>) {
-                    val movies = response.body()?.results
-                    movies?.let {
-                        val moviesList = listOf(
-                                MainCardContainer(
-                                        R.string.upcoming,
-                                        it.map { movie ->
-                                            MovieItem(movie) {
-                                                openMovieDetails(it)
-                                            }
-                                        }
-                                )
-                        )
-                        adapter.apply { addAll(moviesList) }
-                    }
-                }
-
-                override fun onFailure(call: Call<MovieResponse>, error: Throwable) {
-                    Timber.d(error)
-                }
-            })
-
-        MovieApiClient.apiClient
-                .getPopularMovies(API_KEY)
-                .enqueue(object: Callback<MovieResponse>{
-                    override fun onResponse(call: Call<MovieResponse>, response: Response<MovieResponse>) {
-                        val movies = response.body()?.results
-                        movies?.let {
-                            val moviesList = listOf(
-                                    MainCardContainer(
-                                            R.string.popular,
-                                            it.map { movie ->
-                                                MovieItem(movie) {
-                                                    openMovieDetails(it)
-                                                }
-                                            }
-                                    )
-                            )
-                            adapter.apply { addAll(moviesList) }
-                        }
-                    }
-
-                    override fun onFailure(call: Call<MovieResponse>, error: Throwable) {
-                        Timber.d(error)
-                    }
-                })
     }
 
     private fun openMovieDetails(movie: Movie) {
@@ -142,8 +111,8 @@ class FeedFragment : Fragment() {
         }
 
         val bundle = Bundle()
-        bundle.putInt("id", movie.id)
-        bundle.putString("type", "movie")
+        bundle.putInt(BundleProperties.ID_KEY, movie.id)
+        bundle.putString(BundleProperties.TYPE_KEY, BundleProperties.TYPE_MOVIE)
         findNavController().navigate(R.id.movie_details_fragment, bundle, options)
     }
 
@@ -158,7 +127,7 @@ class FeedFragment : Fragment() {
         }
 
         val bundle = Bundle()
-        bundle.putString("search", searchText)
+        bundle.putString(BundleProperties.SEARCH_KEY, searchText)
         findNavController().navigate(R.id.search_dest, bundle, options)
     }
 
@@ -172,7 +141,8 @@ class FeedFragment : Fragment() {
         inflater.inflate(R.menu.main_menu, menu)
     }
 
-    companion object {
-        const val API_KEY = BuildConfig.THE_MOVIE_DATABASE_API
+    override fun onDestroy() {
+        super.onDestroy()
+        subscriptions.clear()
     }
 }

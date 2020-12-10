@@ -4,27 +4,28 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
+import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.movie_details_fragment.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import ru.mikhailskiy.intensiv.BuildConfig
 import ru.mikhailskiy.intensiv.R
 import ru.mikhailskiy.intensiv.data.movie.MovieDetails
 import ru.mikhailskiy.intensiv.data.movie_credits.Actor
 import ru.mikhailskiy.intensiv.data.movie_credits.CastMember
-import ru.mikhailskiy.intensiv.data.movie_credits.MovieCredits
 import ru.mikhailskiy.intensiv.data.tv_show.TvShowDetails
+import ru.mikhailskiy.intensiv.extension.hide
+import ru.mikhailskiy.intensiv.extension.show
+import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
 import ru.mikhailskiy.intensiv.network.MovieApiClient
 import ru.mikhailskiy.intensiv.util.DateParser
 import ru.mikhailskiy.intensiv.util.GenreParser
+import ru.mikhailskiy.intensiv.util.BundleProperties
 import timber.log.Timber
 
 class MovieDetailsFragment : Fragment() {
@@ -33,6 +34,8 @@ class MovieDetailsFragment : Fragment() {
         GroupAdapter<GroupieViewHolder>()
     }
 
+    private val subscriptions = CompositeDisposable()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -40,51 +43,74 @@ class MovieDetailsFragment : Fragment() {
         return inflater.inflate(R.layout.movie_details_fragment, container, false)
     }
 
+
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val viewsList = listOf<View>(
+            movie_poster,
+            year,
+            genre,
+            title,
+            button_watch,
+            movie_rating,
+            iv_4k,
+            description,
+            button_back,
+            tv_year,
+            tv_genre,
+            tv_studio,
+            actors,
+            studio,
+            favorite
+        ).apply { hide() }
         description.movementMethod = ScrollingMovementMethod()
         actors.adapter = adapter.apply { addAll(listOf()) }
         button_back.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
-        when (arguments?.getString("type")) {
-            "tv_show" -> {
-                val id = requireArguments().getInt("id")
-                MovieApiClient.apiClient
-                    .getShowDescription(id, API_KEY)
-                    .enqueue(object: Callback<TvShowDetails>{
-                        override fun onResponse(
-                            call: Call<TvShowDetails>,
-                            response: Response<TvShowDetails>
-                        ) {
-                            val description = response.body()
-                            description?.let {
-                                setupTvShow(it)
-                            }
-                        }
-
-                        override fun onFailure(call: Call<TvShowDetails>, error: Throwable) {
-                            Timber.d(error)
-                        }
+        when (arguments?.getString(BundleProperties.TYPE_KEY)) {
+            BundleProperties.TYPE_SHOW -> {
+                val id = requireArguments().getInt(BundleProperties.ID_KEY)
+                val tvShowDetailsSubscription = MovieApiClient.apiClient
+                    .getShowDescription(id)
+                    .useDefaultNetworkThreads()
+                    .doOnSubscribe {
+                        progress_bar.show()
+                        viewsList.hide()
+                    }
+                    .doOnTerminate {
+                        progress_bar.hide()
+                        viewsList.show()
+                    }
+                    .subscribe({ details ->
+                        setupTvShow(details)
+                    }, { throwable->
+                        Timber.e(throwable)
                     })
+                subscriptions.add(tvShowDetailsSubscription)
             }
 
-            "movie" -> {
-                val id = requireArguments().getInt("id")
-                MovieApiClient.apiClient
-                    .getMovieDetails(id, API_KEY)
-                    .enqueue(object: Callback<MovieDetails>{
-                        override fun onResponse(call: Call<MovieDetails>, response: Response<MovieDetails>) {
-                            val description = response.body()
-                            description?.let {
-                                setupMovie(description, id)
-                            }
-                        }
+            BundleProperties.TYPE_MOVIE -> {
+                val id = requireArguments().getInt(BundleProperties.ID_KEY)
 
-                        override fun onFailure(call: Call<MovieDetails>, error: Throwable) {
-                            Timber.d(error)
-                        }
+                val movieDetailSubscription = MovieApiClient.apiClient
+                    .getMovieDetails(id)
+                    .useDefaultNetworkThreads()
+                    .doOnSubscribe {
+                        progress_bar.show()
+                        viewsList.hide()
+                    }
+                    .doOnTerminate {
+                        progress_bar.hide()
+                        viewsList.show()
+                    }
+                    .subscribe({ details ->
+                        setupMovie(details, id)
+                    }, { throwable ->
+                        Timber.e(throwable)
                     })
+                subscriptions.add(movieDetailSubscription)
             }
 
         }
@@ -135,20 +161,17 @@ class MovieDetailsFragment : Fragment() {
         }
         adapter.clear()
 
-        MovieApiClient.apiClient.getMovieCredits(id, API_KEY)
-                .enqueue(object: Callback<MovieCredits>{
-                    override fun onResponse(call: Call<MovieCredits>, response: Response<MovieCredits>) {
-                        val credits = response.body()
-                        credits?.let {
-                            val topCast = it.cast.sortedByDescending { it.popularity }
-                            setupCast(topCast)
-                        }
-                    }
+        val creditSubscription = MovieApiClient.apiClient
+            .getMovieCredits(id)
+            .useDefaultNetworkThreads()
+            .subscribe({ response ->
+                val topCast = response.cast.sortedByDescending { it.popularity }
+                setupCast(topCast)
+            },{ throwable ->
+                Timber.e(throwable)
+            })
 
-                    override fun onFailure(call: Call<MovieCredits>, error: Throwable) {
-                        Timber.d(error)
-                    }
-                })
+        subscriptions.add(creditSubscription)
 
     }
 
@@ -160,9 +183,9 @@ class MovieDetailsFragment : Fragment() {
                     firstName = actor.name.split(" ")[0],
                     lastName = actor.name.split(" ")[1],
                     photoUrl = if (actor.profilePath != null) {
-                        "${MovieApiClient.IMAGE_BASE_URL}${actor.profilePath}"
+                        "${BuildConfig.API_IMAGE_URL}${actor.profilePath}"
                     } else {
-                        getString(R.string.no_image_url)
+                        Actor.placeholderUrl
                     }
                 )
             )
@@ -171,7 +194,8 @@ class MovieDetailsFragment : Fragment() {
         adapter.apply { addAll(actorsItems) }
     }
 
-    companion object {
-        private const val API_KEY = BuildConfig.THE_MOVIE_DATABASE_API
+    override fun onDestroy() {
+        super.onDestroy()
+        subscriptions.clear()
     }
 }

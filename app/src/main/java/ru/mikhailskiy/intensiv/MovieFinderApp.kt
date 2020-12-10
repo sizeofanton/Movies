@@ -1,8 +1,6 @@
 package ru.mikhailskiy.intensiv
 
 import android.app.Application
-import android.os.Build
-import androidx.core.os.ConfigurationCompat
 import timber.log.Timber
 
 class MovieFinderApp : Application() {

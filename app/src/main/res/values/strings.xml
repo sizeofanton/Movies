@@ -51,5 +51,6 @@
     <string name="mock_studio">Warner Bros.</string>
     <string name="mock_actor_lastname">Momoa</string>
     <string name="mock_actor_firstname">Jason</string>
-    <string name="no_image_url">https://www.allianceplast.com/wp-content/uploads/2017/11/no-image.png</string>
+
+    <string name="title">Title</string>
 </resources>

@@ -1,10 +1,10 @@
 package ru.mikhailskiy.intensiv.data.movie
 
 import com.google.gson.annotations.SerializedName
-import ru.mikhailskiy.intensiv.data.IRating
-import ru.mikhailskiy.intensiv.data.common.Genre
 import ru.mikhailskiy.intensiv.data.IBackdrop
 import ru.mikhailskiy.intensiv.data.IPoster
+import ru.mikhailskiy.intensiv.data.IRating
+import ru.mikhailskiy.intensiv.data.common.Genre
 
 data class Movie(
     @SerializedName("poster_path")

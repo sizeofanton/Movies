@@ -1,8 +1,8 @@
 package ru.mikhailskiy.intensiv.data
 
-import ru.mikhailskiy.intensiv.network.MovieApiClient
+import ru.mikhailskiy.intensiv.BuildConfig
 
 interface IBackdrop {
     val backdropPath: String?
-    fun getBackdrop(): String = "${MovieApiClient.IMAGE_BASE_URL}$backdropPath"
+    fun getBackdrop(): String = "${BuildConfig.API_IMAGE_URL}$backdropPath"
 }

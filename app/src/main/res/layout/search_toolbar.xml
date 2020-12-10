@@ -30,8 +30,7 @@
             android:paddingEnd="@dimen/material_margin_small"
             android:singleLine="true"
             android:textColorHint="@color/grey"
-            android:textSize="14sp"
-            tools:hint="@string/search_hint" />
+            android:textSize="14sp" />
 
         <ImageView
             android:id="@+id/delete_text_button"
