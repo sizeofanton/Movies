@@ -8,20 +8,28 @@ import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.kotlinandroidextensions.GroupieViewHolder
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function3
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.feed_fragment.*
 import kotlinx.android.synthetic.main.feed_header.*
+import ru.mikhailskiy.intensiv.MainActivity
 import ru.mikhailskiy.intensiv.R
 import ru.mikhailskiy.intensiv.data.MovieData
+import ru.mikhailskiy.intensiv.data.MovieDataCached
 import ru.mikhailskiy.intensiv.data.movie.Movie
 import ru.mikhailskiy.intensiv.data.movie.MovieResponse
 import ru.mikhailskiy.intensiv.extension.hide
 import ru.mikhailskiy.intensiv.extension.show
+import ru.mikhailskiy.intensiv.extension.useDefaultDatabaseThreads
 import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
 import ru.mikhailskiy.intensiv.network.MovieApiClient
+import ru.mikhailskiy.intensiv.room.AppDatabase
+import ru.mikhailskiy.intensiv.room.entity.MovieType
+import ru.mikhailskiy.intensiv.room.entity.MovieCache
 import ru.mikhailskiy.intensiv.util.BundleProperties
 import timber.log.Timber
 
@@ -58,49 +66,12 @@ class FeedFragment : Fragment() {
         }
         subscriptions.add(searchSubscription)
 
-
-        val nowPlayingObservable = MovieApiClient.apiClient
-            .getNowPlayingMovies()
-
-        val upcomingObservable = MovieApiClient.apiClient
-            .getUpcomingMovies()
-
-        val popularObservable = MovieApiClient.apiClient
-            .getPopularMovies()
-
-        val movieDataSubscription = Single.zip(nowPlayingObservable, upcomingObservable, popularObservable,
-           Function3<MovieResponse, MovieResponse, MovieResponse, MovieData>{ now, upcoming, popular ->
-               MovieData(
-                   nowPlayingMovies = now.results,
-                   upcomingMovies = upcoming.results,
-                   popularMovies = popular.results
-               )
-           })
-            .useDefaultNetworkThreads()
-            .doOnSubscribe { progress_bar.show() }
-            .doOnTerminate { progress_bar.hide() }
-            .subscribe({ movieData ->
-                val moviesList = listOf(
-                    MainCardContainer(R.string.now_playing, movieData.nowPlayingMovies.map {
-                        MovieItem(it) {openMovieDetails(it)}
-                    }),
-                    MainCardContainer(R.string.upcoming, movieData.upcomingMovies.map {
-                        MovieItem(it) {openMovieDetails(it)}
-                    }),
-                    MainCardContainer(R.string.popular, movieData.popularMovies.map {
-                        MovieItem(it) {openMovieDetails(it)}
-                    })
-                )
-                adapter.apply { addAll(moviesList) }
-            }, { throwable ->
-                Timber.e(throwable)
-            })
-
-        subscriptions.add(movieDataSubscription)
-
+        progress_bar.show()
+        val connected = (activity as MainActivity).isConnectedToNetwork()
+        if (connected) fetchFromBackend() else fetchFromLocalDb()
     }
 
-    private fun openMovieDetails(movie: Movie) {
+    private fun openMovieDetails(id: Int) {
         val options = navOptions {
             anim {
                 enter = R.anim.slide_in_right
@@ -111,7 +82,7 @@ class FeedFragment : Fragment() {
         }
 
         val bundle = Bundle()
-        bundle.putInt(BundleProperties.ID_KEY, movie.id)
+        bundle.putInt(BundleProperties.ID_KEY, id)
         bundle.putString(BundleProperties.TYPE_KEY, BundleProperties.TYPE_MOVIE)
         findNavController().navigate(R.id.movie_details_fragment, bundle, options)
     }
@@ -131,6 +102,59 @@ class FeedFragment : Fragment() {
         findNavController().navigate(R.id.search_dest, bundle, options)
     }
 
+    private fun cacheMovies(movieData: MovieData) {
+        val localDb = AppDatabase.newInstance(requireContext())
+        val cachingSubscription = localDb.cache()
+            .clear()
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .subscribe {
+                for (movie in movieData.nowPlayingMovies) {
+                    localDb.cache()
+                        .insert(
+                            MovieCache(
+                                id = null,
+                                movieId = movie.id,
+                                type = MovieType.NOW_PLAYING,
+                                rating = movie.rating,
+                                title = movie.title
+                            )
+                        )
+                        .subscribe()
+                }
+
+                for (movie in movieData.upcomingMovies) {
+                    localDb.cache()
+                        .insert(
+                            MovieCache(
+                                id = null,
+                                movieId = movie.id,
+                                type = MovieType.UPCOMING,
+                                rating = movie.rating,
+                                title = movie.title
+                            )
+                        )
+                        .subscribe()
+                }
+
+                for (movie in movieData.popularMovies) {
+                    localDb.cache()
+                        .insert(
+                            MovieCache(
+                                id = null,
+                                movieId = movie.id,
+                                type = MovieType.POPULAR,
+                                rating = movie.rating,
+                                title =  movie.title
+                            )
+                        )
+                        .subscribe()
+                }
+            }
+        subscriptions.add(cachingSubscription)
+
+    }
+
     override fun onStop() {
         super.onStop()
         search_toolbar.clear()
@@ -144,5 +168,94 @@ class FeedFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         subscriptions.clear()
+    }
+
+    private fun fetchFromBackend() {
+        val nowPlayingObservable = MovieApiClient.apiClient
+            .getNowPlayingMovies()
+
+        val upcomingObservable = MovieApiClient.apiClient
+            .getUpcomingMovies()
+
+        val popularObservable = MovieApiClient.apiClient
+            .getPopularMovies()
+
+        val movieDataSubscription =
+            Single.zip(nowPlayingObservable, upcomingObservable, popularObservable,
+                Function3<MovieResponse, MovieResponse, MovieResponse, MovieData> { now, upcoming, popular ->
+                    MovieData(
+                        nowPlayingMovies = now.results,
+                        upcomingMovies = upcoming.results,
+                        popularMovies = popular.results
+                    )
+                })
+                .useDefaultNetworkThreads()
+                .doOnTerminate { progress_bar.hide() }
+                .subscribe({ movieData ->
+                    val moviesList = listOf(
+                        MainCardContainer(R.string.now_playing, movieData.nowPlayingMovies.map {
+                            MovieItem(it) { openMovieDetails(it.id) }
+                        }),
+                        MainCardContainer(R.string.upcoming, movieData.upcomingMovies.map {
+                            MovieItem(it) { openMovieDetails(it.id) }
+                        }),
+                        MainCardContainer(R.string.popular, movieData.popularMovies.map {
+                            MovieItem(it) { openMovieDetails(it.id) }
+                        })
+                    )
+                    adapter.apply { addAll(moviesList) }
+                    cacheMovies(movieData)
+
+                }, { throwable ->
+                    Timber.e(throwable)
+                })
+
+        subscriptions.add(movieDataSubscription)
+    }
+
+    private fun fetchFromLocalDb() {
+        val localDb = AppDatabase.newInstance(requireContext())
+        val nowPlayingObservable = localDb.cache()
+            .getNowPlaying()
+        val upcomingObservable = localDb.cache()
+            .getUpcoming()
+        val popularObservable = localDb.cache()
+            .getPopular()
+
+        val movieDataSubscription = Observable.zip(
+            nowPlayingObservable,
+            upcomingObservable,
+            popularObservable,
+            Function3<List<MovieCache>, List<MovieCache>, List<MovieCache>, MovieDataCached>() { now, upcoming, popular ->
+                MovieDataCached(
+                    nowPlaying = now,
+                    upcoming = upcoming,
+                    popular = popular
+                )
+            }
+        )
+            .doOnSubscribe { progress_bar.hide() }
+            .doOnEach { progress_bar.hide() }
+            .useDefaultDatabaseThreads()
+            .subscribe({ movieData ->
+                val moviesList = listOf(
+                    MainCardContainer(R.string.now_playing, movieData.nowPlaying.map {
+                        MovieItemCached(it) { openMovieDetails(it.movieId) }
+                    }),
+                    MainCardContainer(R.string.upcoming, movieData.upcoming.map {
+                        MovieItemCached(it) { openMovieDetails(it.movieId) }
+                    }),
+                    MainCardContainer(R.string.popular, movieData.popular.map {
+                        MovieItemCached(it) { openMovieDetails(it.movieId) }
+                    })
+                )
+                adapter.apply { addAll(moviesList) }
+
+
+            }, { throwable ->
+                Timber.e(throwable)
+            })
+
+        subscriptions.add(movieDataSubscription)
     }
 }

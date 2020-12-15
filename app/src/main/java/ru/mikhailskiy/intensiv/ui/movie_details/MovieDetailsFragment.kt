@@ -11,7 +11,9 @@ import androidx.fragment.app.Fragment
 import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.movie_details_fragment.*
 import ru.mikhailskiy.intensiv.BuildConfig
 import ru.mikhailskiy.intensiv.R
@@ -19,10 +21,13 @@ import ru.mikhailskiy.intensiv.data.movie.MovieDetails
 import ru.mikhailskiy.intensiv.data.movie_credits.Actor
 import ru.mikhailskiy.intensiv.data.movie_credits.CastMember
 import ru.mikhailskiy.intensiv.data.tv_show.TvShowDetails
+import ru.mikhailskiy.intensiv.extension.getObservable
 import ru.mikhailskiy.intensiv.extension.hide
 import ru.mikhailskiy.intensiv.extension.show
 import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
 import ru.mikhailskiy.intensiv.network.MovieApiClient
+import ru.mikhailskiy.intensiv.room.AppDatabase
+import ru.mikhailskiy.intensiv.room.entity.FavoriteMovie
 import ru.mikhailskiy.intensiv.util.DateParser
 import ru.mikhailskiy.intensiv.util.GenreParser
 import ru.mikhailskiy.intensiv.util.BundleProperties
@@ -114,6 +119,8 @@ class MovieDetailsFragment : Fragment() {
             }
 
         }
+
+
     }
 
     private fun setupTvShow(details: TvShowDetails) {
@@ -138,6 +145,7 @@ class MovieDetailsFragment : Fragment() {
             }
         }
         adapter.clear()
+        favorite.hide()
     }
 
     private fun setupMovie(details: MovieDetails, id: Int) {
@@ -172,6 +180,59 @@ class MovieDetailsFragment : Fragment() {
             })
 
         subscriptions.add(creditSubscription)
+
+        val db = AppDatabase.newInstance(requireContext())
+        val currentMovie = FavoriteMovie(details.getPoster(), details.id)
+        val favoritesSubscription = db.favorites().get()
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .subscribe{ list ->
+                favorite.isChecked = list.contains(currentMovie)
+            }
+//        favorite.setOnCheckedChangeListener { _, b ->
+//            if (b) {
+//                db.favorites()
+//                    .insert(currentMovie)
+//                    .subscribeOn(Schedulers.io())
+//                    .observeOn(Schedulers.io())
+//                    .subscribe({}, { throwable ->
+//                    Timber.e(throwable)
+//                })
+//            } else {
+//                db.favorites()
+//                    .delete(currentMovie)
+//                    .subscribeOn(Schedulers.io())
+//                    .observeOn(Schedulers.io())
+//                    .subscribe({}, { throwable ->
+//                    Timber.e(throwable)
+//                })
+//            }
+//        }
+        subscriptions.add(favoritesSubscription)
+
+        val checkBoxSubscription = favorite.getObservable()
+            .subscribe({ checked ->
+               if (checked) {
+                   db.favorites()
+                       .insert(currentMovie)
+                       .subscribeOn(Schedulers.io())
+                       .observeOn(Schedulers.io())
+                       .subscribe({}, { throwable ->
+                           Timber.e(throwable)
+                       })
+               } else {
+                   db.favorites()
+                       .delete(currentMovie)
+                       .subscribeOn(Schedulers.io())
+                       .observeOn(Schedulers.io())
+                       .subscribe({}, { throwable ->
+                           Timber.e(throwable)
+                       })
+               }
+            },{ throwable ->
+                Timber.e(throwable)
+            })
+        subscriptions.add(checkBoxSubscription)
 
     }
 
