@@ -1,7 +1,7 @@
 package ru.mikhailskiy.intensiv.data.tv_show
 
 import com.google.gson.annotations.SerializedName
-import ru.mikhailskiy.intensiv.data.IRating
+import ru.mikhailskiy.intensiv.data.RatingProvider
 
 data class Episode(
     @SerializedName("air_date")
@@ -21,4 +21,4 @@ data class Episode(
     override val voteAverage: Double,
     @SerializedName("vote_count")
     val voteCount: Int
-): IRating
+): RatingProvider

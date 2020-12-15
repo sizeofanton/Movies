@@ -1,9 +1,9 @@
 package ru.mikhailskiy.intensiv.data.tv_show
 
 import com.google.gson.annotations.SerializedName
-import ru.mikhailskiy.intensiv.data.IBackdrop
-import ru.mikhailskiy.intensiv.data.IPoster
-import ru.mikhailskiy.intensiv.data.IRating
+import ru.mikhailskiy.intensiv.data.BackdropProvider
+import ru.mikhailskiy.intensiv.data.PosterProvider
+import ru.mikhailskiy.intensiv.data.RatingProvider
 
 data class TvShow(
     @SerializedName("poster_path")
@@ -29,4 +29,4 @@ data class TvShow(
     val title: String,
     @SerializedName("original_name")
     val originalTitle: String
-): IBackdrop, IPoster, IRating
+): BackdropProvider, PosterProvider, RatingProvider
