@@ -1,9 +1,9 @@
 package ru.mikhailskiy.intensiv.data.tv_show
 
 import com.google.gson.annotations.SerializedName
-import ru.mikhailskiy.intensiv.data.IBackdrop
-import ru.mikhailskiy.intensiv.data.IPoster
-import ru.mikhailskiy.intensiv.data.IRating
+import ru.mikhailskiy.intensiv.data.BackdropProvider
+import ru.mikhailskiy.intensiv.data.PosterProvider
+import ru.mikhailskiy.intensiv.data.RatingProvider
 import ru.mikhailskiy.intensiv.data.common.Genre
 import ru.mikhailskiy.intensiv.data.common.ProductionCompany
 import ru.mikhailskiy.intensiv.data.common.ProductionCountry
@@ -62,4 +62,4 @@ data class TvShowDetails(
     override val voteAverage: Double,
     @SerializedName("vote_count")
     val voteCount: Int
-): IBackdrop, IRating, IPoster
+): BackdropProvider, RatingProvider, PosterProvider

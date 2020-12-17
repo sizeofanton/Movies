@@ -11,21 +11,23 @@ import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayoutMediator
 import com.squareup.picasso.Picasso
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import jp.wasabeef.picasso.transformations.CropCircleTransformation
 import kotlinx.android.synthetic.main.fragment_profile.*
 import ru.mikhailskiy.intensiv.R
+import ru.mikhailskiy.intensiv.extension.useDefaultDatabaseThreads
+import ru.mikhailskiy.intensiv.room.AppDatabase
+import timber.log.Timber
 
+private const val numOfTabs = 2
 class ProfileFragment : Fragment() {
 
-    private lateinit var profileTabLayoutTitles: Array<String>
+    //private lateinit var profileTabLayoutTitles: Array<String>
 
     private var profilePageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
-            Toast.makeText(
-                requireContext(),
-                "Selected position: $position",
-                Toast.LENGTH_SHORT
-            ).show()
+
         }
     }
 
@@ -46,28 +48,32 @@ class ProfileFragment : Fragment() {
             .placeholder(R.drawable.ic_avatar)
             .into(avatar)
 
-        profileTabLayoutTitles = resources.getStringArray(R.array.tab_titles)
+        //profileTabLayoutTitles = resources.getStringArray(R.array.tab_titles)
 
         val profileAdapter = ProfileAdapter(
             this,
-            profileTabLayoutTitles.size
+            numOfTabs
         )
         doppelgangerViewPager.adapter = profileAdapter
 
         doppelgangerViewPager.registerOnPageChangeCallback(profilePageChangeCallback)
 
         TabLayoutMediator(tabLayout, doppelgangerViewPager) { tab, position ->
+            if (position == 0)
+                AppDatabase.newInstance(requireContext())
+                    .favorites()
+                    .get()
+                    .useDefaultDatabaseThreads()
+                    .map { it.count() }
+                    .subscribe({ itemsCount ->
+                        tab.text = getString(R.string.liked, itemsCount.toString())
+                    }, { throwable ->
+                        Timber.e(throwable)
+                    })
+            if (position == 1) {
+                tab.text = getString(R.string.later, 0.toString())
+            }
 
-            // Выделение первой части заголовка таба
-            // Название таба
-            val title = profileTabLayoutTitles[position]
-            // Раздеряем название на части. Первый элемент будет кол-во
-            val parts = profileTabLayoutTitles[position].split(" ")
-            val number = parts[0]
-            val spannableStringTitle = SpannableString(title)
-            spannableStringTitle.setSpan(RelativeSizeSpan(2f), 0, number.count(), 0)
-
-            tab.text = spannableStringTitle
         }.attach()
     }
 }
