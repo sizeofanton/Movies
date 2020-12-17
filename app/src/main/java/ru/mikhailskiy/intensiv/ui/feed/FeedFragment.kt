@@ -16,11 +16,9 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.feed_fragment.*
 import kotlinx.android.synthetic.main.feed_header.*
-import ru.mikhailskiy.intensiv.MainActivity
 import ru.mikhailskiy.intensiv.R
 import ru.mikhailskiy.intensiv.data.MovieData
 import ru.mikhailskiy.intensiv.data.MovieDataCached
-import ru.mikhailskiy.intensiv.data.movie.Movie
 import ru.mikhailskiy.intensiv.data.movie.MovieResponse
 import ru.mikhailskiy.intensiv.extension.hide
 import ru.mikhailskiy.intensiv.extension.show
@@ -67,8 +65,13 @@ class FeedFragment : Fragment() {
         subscriptions.add(searchSubscription)
 
         progress_bar.show()
-        val connected = (activity as MainActivity).isConnectedToNetwork()
-        if (connected) fetchFromBackend() else fetchFromLocalDb()
+//        val connected =
+//                if (activity is ConnectionAware)
+//                        (activity as ConnectionAware).isConnectedToNetwork()
+//                else false
+
+        //if (connected) fetchFromBackend() else fetchFromLocalDb()
+        fetchFromBackend()
     }
 
     private fun openMovieDetails(id: Int) {
@@ -115,7 +118,7 @@ class FeedFragment : Fragment() {
                             MovieCache(
                                 id = null,
                                 movieId = movie.id,
-                                type = MovieType.NOW_PLAYING,
+                                type = MovieType.NOW_PLAYING.name,
                                 rating = movie.rating,
                                 title = movie.title
                             )
@@ -129,7 +132,7 @@ class FeedFragment : Fragment() {
                             MovieCache(
                                 id = null,
                                 movieId = movie.id,
-                                type = MovieType.UPCOMING,
+                                type = MovieType.UPCOMING.name,
                                 rating = movie.rating,
                                 title = movie.title
                             )
@@ -143,7 +146,7 @@ class FeedFragment : Fragment() {
                             MovieCache(
                                 id = null,
                                 movieId = movie.id,
-                                type = MovieType.POPULAR,
+                                type = MovieType.POPULAR.name,
                                 rating = movie.rating,
                                 title =  movie.title
                             )
@@ -207,7 +210,8 @@ class FeedFragment : Fragment() {
                     cacheMovies(movieData)
 
                 }, { throwable ->
-                    Timber.e(throwable)
+                    //Timber.e(throwable)
+                    fetchFromLocalDb()
                 })
 
         subscriptions.add(movieDataSubscription)
@@ -216,11 +220,11 @@ class FeedFragment : Fragment() {
     private fun fetchFromLocalDb() {
         val localDb = AppDatabase.newInstance(requireContext())
         val nowPlayingObservable = localDb.cache()
-            .getNowPlaying()
+            .getByType(MovieType.NOW_PLAYING.name)
         val upcomingObservable = localDb.cache()
-            .getUpcoming()
+            .getByType(MovieType.UPCOMING.name)
         val popularObservable = localDb.cache()
-            .getPopular()
+            .getByType(MovieType.POPULAR.name)
 
         val movieDataSubscription = Observable.zip(
             nowPlayingObservable,

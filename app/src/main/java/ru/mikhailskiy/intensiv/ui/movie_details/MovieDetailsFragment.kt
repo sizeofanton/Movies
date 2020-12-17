@@ -216,7 +216,6 @@ class MovieDetailsFragment : Fragment() {
                    db.favorites()
                        .insert(currentMovie)
                        .subscribeOn(Schedulers.io())
-                       .observeOn(Schedulers.io())
                        .subscribe({}, { throwable ->
                            Timber.e(throwable)
                        })
@@ -224,7 +223,6 @@ class MovieDetailsFragment : Fragment() {
                    db.favorites()
                        .delete(currentMovie)
                        .subscribeOn(Schedulers.io())
-                       .observeOn(Schedulers.io())
                        .subscribe({}, { throwable ->
                            Timber.e(throwable)
                        })

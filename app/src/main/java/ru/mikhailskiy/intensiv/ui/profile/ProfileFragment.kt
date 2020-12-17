@@ -16,13 +16,14 @@ import io.reactivex.schedulers.Schedulers
 import jp.wasabeef.picasso.transformations.CropCircleTransformation
 import kotlinx.android.synthetic.main.fragment_profile.*
 import ru.mikhailskiy.intensiv.R
+import ru.mikhailskiy.intensiv.extension.useDefaultDatabaseThreads
 import ru.mikhailskiy.intensiv.room.AppDatabase
 import timber.log.Timber
 
+private const val numOfTabs = 2
 class ProfileFragment : Fragment() {
 
     //private lateinit var profileTabLayoutTitles: Array<String>
-    private val numOfTabs = 2
 
     private var profilePageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
@@ -62,8 +63,7 @@ class ProfileFragment : Fragment() {
                 AppDatabase.newInstance(requireContext())
                     .favorites()
                     .get()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
+                    .useDefaultDatabaseThreads()
                     .map { it.count() }
                     .subscribe({ itemsCount ->
                         tab.text = getString(R.string.liked, itemsCount.toString())

@@ -17,6 +17,7 @@ import kotlinx.android.synthetic.main.movie_details_fragment.*
 import ru.mikhailskiy.intensiv.R
 import ru.mikhailskiy.intensiv.data.MockRepository
 import ru.mikhailskiy.intensiv.data.movie.Movie
+import ru.mikhailskiy.intensiv.extension.useDefaultDatabaseThreads
 import ru.mikhailskiy.intensiv.room.AppDatabase
 import ru.mikhailskiy.intensiv.room.entity.FavoriteMovie
 import ru.mikhailskiy.intensiv.util.BundleProperties
@@ -46,8 +47,7 @@ class WatchlistFragment : Fragment() {
                 val subcription = AppDatabase.newInstance(requireContext())
                     .favorites()
                     .get()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
+                    .useDefaultDatabaseThreads()
                     .subscribe({ list ->
                         Timber.e(list.toString())
                         val favoriteList = list.map { movie ->

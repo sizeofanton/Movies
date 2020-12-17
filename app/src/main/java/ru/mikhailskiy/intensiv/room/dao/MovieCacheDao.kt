@@ -22,13 +22,16 @@ interface MovieCacheDao {
     @Query("DELETE FROM movie_cache")
     fun clear(): Completable
 
-    @Query("SELECT * FROM movie_cache WHERE type=0")
-    fun getNowPlaying(): Observable<List<MovieCache>>
+//    @Query("SELECT * FROM movie_cache WHERE type=0")
+//    fun getNowPlaying(): Observable<List<MovieCache>>
+//
+//    @Query("SELECT * FROM movie_cache WHERE type=1")
+//    fun getUpcoming(): Observable<List<MovieCache>>
+//
+//    @Query("SELECT * FROM movie_cache WHERE type=2")
+//    fun getPopular(): Observable<List<MovieCache>>
 
-    @Query("SELECT * FROM movie_cache WHERE type=1")
-    fun getUpcoming(): Observable<List<MovieCache>>
-
-    @Query("SELECT * FROM movie_cache WHERE type=2")
-    fun getPopular(): Observable<List<MovieCache>>
+    @Query("SELECT * FROM movie_cache WHERE type=:type")
+    fun getByType(type: String): Observable<List<MovieCache>>
 
 }
