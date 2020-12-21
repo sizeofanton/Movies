@@ -1,9 +1,6 @@
 package ru.mikhailskiy.intensiv
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkInfo
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.ConfigurationCompat
@@ -11,11 +8,6 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
-import ru.mikhailskiy.intensiv.room.AppDatabase
-import ru.mikhailskiy.intensiv.room.entity.FavoriteMovie
-import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
 

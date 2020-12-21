@@ -2,7 +2,7 @@ package ru.mikhailskiy.intensiv
 
 import org.junit.Test
 import org.junit.Assert.assertEquals
-import ru.mikhailskiy.intensiv.data.common.Genre
+import ru.mikhailskiy.intensiv.data.dto.common.Genre
 import ru.mikhailskiy.intensiv.util.GenreParser
 
 class GenreParserTest {

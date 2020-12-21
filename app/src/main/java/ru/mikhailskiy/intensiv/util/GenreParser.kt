@@ -1,6 +1,6 @@
 package ru.mikhailskiy.intensiv.util
 
-import ru.mikhailskiy.intensiv.data.common.Genre
+import ru.mikhailskiy.intensiv.data.dto.common.Genre
 
 class GenreParser {
     companion object {

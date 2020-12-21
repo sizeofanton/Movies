@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/blueDark"
-    tools:context="ru.mikhailskiy.intensiv.ui.movie_details.MovieDetailsFragment">
+    tools:context=".presentation.movie_details.MovieDetailsFragment">
 
 
     <TextView
