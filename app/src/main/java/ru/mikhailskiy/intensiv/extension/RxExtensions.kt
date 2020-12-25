@@ -11,6 +11,12 @@ fun <T> Single<T>.useDefaultNetworkThreads(): Single<T> {
         .observeOn(AndroidSchedulers.mainThread())
 }
 
+fun <T> Single<T>.useDefaultDatabaseThreads(): Single<T> {
+    return this
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+}
+
 fun <T> Observable<T>.useDefaultDatabaseThreads(): Observable<T> {
     return this
         .subscribeOn(Schedulers.io())

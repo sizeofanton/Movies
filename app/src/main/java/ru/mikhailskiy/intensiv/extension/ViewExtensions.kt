@@ -4,6 +4,8 @@ import android.view.View
 import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
 import android.widget.CheckBox
+import androidx.fragment.app.Fragment
+import com.google.android.material.snackbar.Snackbar
 import io.reactivex.Observable
 
 fun View.show() {
@@ -32,4 +34,8 @@ fun CheckBox.getObservable(): Observable<Boolean> {
             emitter.onNext(b)
         }
     }
+}
+
+fun Fragment.showSnackbar(msg: String) {
+    Snackbar.make(requireView(), msg, Snackbar.LENGTH_LONG).show()
 }
