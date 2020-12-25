@@ -13,5 +13,5 @@ class FavoriteMovieRepositoryLocal: FavoriteMovieRepository {
         MovieFinderApp.appDatabase
                 .favorites()
                 .get()
-                .map { list -> FavoriteMovieMapper().map(list) }
+                .map { list -> FavoriteMovieMapper.toViewObject(list) }
 }

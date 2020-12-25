@@ -10,6 +10,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import ru.mikhailskiy.intensiv.data.vo.TvShow
 import ru.mikhailskiy.intensiv.domain.usecase.tvshows.TvShowsUseCases
+import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
 import timber.log.Timber
 
 @KoinApiExtension
@@ -22,23 +23,20 @@ class TvShowsViewModel: ViewModel(), KoinComponent {
     val tvShowsLiveData: LiveData<List<TvShow>>
         get() = _tvShows
 
-    private val _errorMessage = MutableLiveData<String>()
-    val errorMessageLiveData: LiveData<String>
-        get() = _errorMessage
-
-    private val _progressBarVisibility = MutableLiveData<Int>(View.VISIBLE)
-    val progressBarVisibility: LiveData<Int>
-        get() = _progressBarVisibility
+    private val _loadingState = MutableLiveData<DataLoadingStates>()
+    val loadingStateLiveData: LiveData<DataLoadingStates> = _loadingState
 
     fun fetchTvShows() {
         subscriptions.add(
             useCases.getPopularTvShows()
-                .doOnTerminate { _progressBarVisibility.value = View.INVISIBLE}
+                .useDefaultNetworkThreads()
+                .doOnSubscribe { _loadingState.value = DataLoadingStates.Loading }
                 .subscribe({ tvShows ->
                     _tvShows.value = tvShows
+                    _loadingState.value = DataLoadingStates.Loaded
                 }, { throwable ->
                     Timber.e(throwable)
-                    _errorMessage.value = throwable.message
+                    _loadingState.value = DataLoadingStates.Error
                 })
         )
     }
@@ -46,5 +44,9 @@ class TvShowsViewModel: ViewModel(), KoinComponent {
     override fun onCleared() {
         super.onCleared()
         subscriptions.clear()
+    }
+
+    enum class DataLoadingStates() {
+        Loading, Error, Loaded
     }
 }

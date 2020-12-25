@@ -4,9 +4,13 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import ru.mikhailskiy.intensiv.data.dto.PosterProvider
 
-@Entity(tableName = "favorite")
+@Entity(tableName = FavoriteMovieEntity.TABLE_NAME)
 data class FavoriteMovieEntity(
     val posterPath: String,
     @PrimaryKey
     val movieDbId: Int
-)
+) {
+    companion object {
+        const val TABLE_NAME = "favorite"
+    }
+}

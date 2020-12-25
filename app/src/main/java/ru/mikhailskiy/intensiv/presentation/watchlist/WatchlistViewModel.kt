@@ -9,6 +9,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import ru.mikhailskiy.intensiv.data.vo.FavoriteMovie
 import ru.mikhailskiy.intensiv.domain.usecase.watchlist.WatchlistUseCases
+import ru.mikhailskiy.intensiv.extension.useDefaultDatabaseThreads
 
 @KoinApiExtension
 class WatchlistViewModel: ViewModel(), KoinComponent {
@@ -26,6 +27,7 @@ class WatchlistViewModel: ViewModel(), KoinComponent {
     fun getFavoriteMovies() {
         subscriptions.add(
             useCases.getFavoriteMovies()
+                .useDefaultDatabaseThreads()
                 .subscribe({ list ->
                         _favoriteMovies.value = list
                     },{ throwable ->

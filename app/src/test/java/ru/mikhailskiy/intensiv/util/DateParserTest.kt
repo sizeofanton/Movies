@@ -1,4 +1,4 @@
-package ru.mikhailskiy.intensiv
+package ru.mikhailskiy.intensiv.util
 
 import org.junit.Test
 import ru.mikhailskiy.intensiv.util.DateParser

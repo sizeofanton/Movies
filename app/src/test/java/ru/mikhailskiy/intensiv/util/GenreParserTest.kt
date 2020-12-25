@@ -1,9 +1,8 @@
-package ru.mikhailskiy.intensiv
+package ru.mikhailskiy.intensiv.util
 
 import org.junit.Test
 import org.junit.Assert.assertEquals
 import ru.mikhailskiy.intensiv.data.dto.common.Genre
-import ru.mikhailskiy.intensiv.util.GenreParser
 
 class GenreParserTest {
     @Test

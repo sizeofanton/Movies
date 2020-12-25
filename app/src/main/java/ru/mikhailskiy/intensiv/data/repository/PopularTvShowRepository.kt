@@ -10,6 +10,6 @@ class PopularTvShowRepository(): TvShowsRepository {
     override fun getTvShows(): Single<List<TvShow>> {
         return MovieApiClient.apiClient
             .getPopularShow()
-            .map { TvShowMapper().map(it.results) }
+            .map { TvShowMapper.toViewObject(it.results) }
     }
 }

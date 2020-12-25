@@ -6,7 +6,8 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import ru.mikhailskiy.intensiv.data.room.AppDatabase
-import ru.mikhailskiy.intensiv.di.movieAppModule
+import ru.mikhailskiy.intensiv.di.movieAppDomainModule
+import ru.mikhailskiy.intensiv.di.movieAppPresentationModule
 import timber.log.Timber
 
 class MovieFinderApp : Application() {
@@ -32,7 +33,7 @@ class MovieFinderApp : Application() {
         startKoin {
             androidLogger()
             androidContext(this@MovieFinderApp)
-            modules(movieAppModule)
+            modules(movieAppPresentationModule, movieAppDomainModule)
         }
     }
 

@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
@@ -16,14 +15,10 @@ import kotlinx.android.synthetic.main.tv_shows_fragment.*
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinApiExtension
 import ru.mikhailskiy.intensiv.R
-import ru.mikhailskiy.intensiv.data.dto.tv_show.TvShowDto
 import ru.mikhailskiy.intensiv.extension.hide
 import ru.mikhailskiy.intensiv.extension.show
-import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
-import ru.mikhailskiy.intensiv.data.network.MovieApiClient
 import ru.mikhailskiy.intensiv.extension.showSnackbar
 import ru.mikhailskiy.intensiv.util.BundleProperties
-import timber.log.Timber
 
 
 @KoinApiExtension
@@ -58,11 +53,20 @@ class TvShowsFragment : Fragment() {
             }
             tv_shows_recycler_view.adapter = adapter.apply { addAll(items) }
         }
-        viewModel.errorMessageLiveData.observe(viewLifecycleOwner) { errorMsg ->
-            showSnackbar(errorMsg)
-        }
-        viewModel.progressBarVisibility.observe(viewLifecycleOwner) { visibility ->
-            progress_bar.visibility = visibility
+
+        viewModel.loadingStateLiveData.observe(viewLifecycleOwner) {
+            when (it) {
+                TvShowsViewModel.DataLoadingStates.Error -> {
+                    progress_bar.hide()
+                    showSnackbar("Error message") // TODO change && to res
+                }
+                TvShowsViewModel.DataLoadingStates.Loaded -> {
+                    progress_bar.hide()
+                }
+                TvShowsViewModel.DataLoadingStates.Loading -> {
+                    progress_bar.show()
+                }
+            }
         }
 
     }

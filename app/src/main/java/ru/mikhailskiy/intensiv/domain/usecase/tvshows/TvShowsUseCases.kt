@@ -15,6 +15,5 @@ class TvShowsUseCases: KoinComponent {
 
     fun getPopularTvShows(): Single<List<TvShow>> =
             repository.getTvShows()
-                    .useDefaultNetworkThreads()
 
 }

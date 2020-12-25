@@ -14,7 +14,6 @@ class WatchlistUseCases: KoinComponent {
 
     fun getFavoriteMovies(): Observable<List<FavoriteMovie>> {
         return favoriteMovieRepository.getFavorites()
-                .useDefaultDatabaseThreads()
     }
 
 }

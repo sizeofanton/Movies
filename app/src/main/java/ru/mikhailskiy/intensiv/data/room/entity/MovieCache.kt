@@ -9,7 +9,7 @@ enum class MovieType() {
     POPULAR
 }
 
-@Entity(tableName = "movie_cache")
+@Entity(tableName = MovieCache.TABLE_NAME)
 data class MovieCache(
     @PrimaryKey(autoGenerate = true)
     val id: Int?,
@@ -17,4 +17,8 @@ data class MovieCache(
     val type: String,
     val rating: Float,
     val title: String
-)
+) {
+    companion object {
+        const val TABLE_NAME = "movie_cache"
+    }
+}

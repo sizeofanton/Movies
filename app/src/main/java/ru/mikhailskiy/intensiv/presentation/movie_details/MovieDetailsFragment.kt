@@ -20,13 +20,10 @@ import ru.mikhailskiy.intensiv.data.dto.movie.MovieDetails
 import ru.mikhailskiy.intensiv.data.dto.movie_credits.Actor
 import ru.mikhailskiy.intensiv.data.dto.movie_credits.CastMember
 import ru.mikhailskiy.intensiv.data.dto.tv_show.TvShowDetails
-import ru.mikhailskiy.intensiv.extension.getObservable
-import ru.mikhailskiy.intensiv.extension.hide
-import ru.mikhailskiy.intensiv.extension.show
-import ru.mikhailskiy.intensiv.extension.useDefaultNetworkThreads
 import ru.mikhailskiy.intensiv.data.network.MovieApiClient
 import ru.mikhailskiy.intensiv.data.room.AppDatabase
 import ru.mikhailskiy.intensiv.data.room.entity.FavoriteMovieEntity
+import ru.mikhailskiy.intensiv.extension.*
 import ru.mikhailskiy.intensiv.util.DateParser
 import ru.mikhailskiy.intensiv.util.GenreParser
 import ru.mikhailskiy.intensiv.util.BundleProperties
@@ -182,31 +179,12 @@ class MovieDetailsFragment : Fragment() {
 
         val db = AppDatabase.newInstance(requireContext())
         val currentMovie = FavoriteMovieEntity(details.getPoster(), details.id)
-        val favoritesSubscription = db.favorites().get()
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .subscribe{ list ->
-                favorite.isChecked = list.contains(currentMovie)
+        val favoritesSubscription = db.favorites().exists(id)
+            .useDefaultDatabaseThreads()
+            .subscribe{ exists ->
+                favorite.isChecked = exists
             }
-//        favorite.setOnCheckedChangeListener { _, b ->
-//            if (b) {
-//                db.favorites()
-//                    .insert(currentMovie)
-//                    .subscribeOn(Schedulers.io())
-//                    .observeOn(Schedulers.io())
-//                    .subscribe({}, { throwable ->
-//                    Timber.e(throwable)
-//                })
-//            } else {
-//                db.favorites()
-//                    .delete(currentMovie)
-//                    .subscribeOn(Schedulers.io())
-//                    .observeOn(Schedulers.io())
-//                    .subscribe({}, { throwable ->
-//                    Timber.e(throwable)
-//                })
-//            }
-//        }
+
         subscriptions.add(favoritesSubscription)
 
         val checkBoxSubscription = favorite.getObservable()
