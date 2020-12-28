@@ -9,7 +9,7 @@ import ru.mikhailskiy.intensiv.data.dto.common.ProductionCompany
 import ru.mikhailskiy.intensiv.data.dto.common.ProductionCountry
 import ru.mikhailskiy.intensiv.data.dto.common.SpokenLanguage
 
-data class TvShowDetails(
+data class TvShowDetailsDto(
     @SerializedName("backdrop_path")
     override val backdropPath: String?,
     @SerializedName("created_by")

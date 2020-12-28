@@ -6,10 +6,10 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import ru.mikhailskiy.intensiv.BuildConfig
 import ru.mikhailskiy.intensiv.MovieFinderApp
-import ru.mikhailskiy.intensiv.data.dto.movie.MovieDetails
+import ru.mikhailskiy.intensiv.data.dto.movie.MovieDetailsDto
 import ru.mikhailskiy.intensiv.data.dto.movie.MovieResponse
-import ru.mikhailskiy.intensiv.data.dto.movie_credits.MovieCredits
-import ru.mikhailskiy.intensiv.data.dto.tv_show.TvShowDetails
+import ru.mikhailskiy.intensiv.data.dto.movie_credits.MovieCreditsDto
+import ru.mikhailskiy.intensiv.data.dto.tv_show.TvShowDetailsDto
 import ru.mikhailskiy.intensiv.data.dto.tv_show.TvShowResponse
 
 private const val API_KEY = BuildConfig.THE_MOVIE_DATABASE_API
@@ -25,7 +25,7 @@ interface MovieApiInterface {
         @Path("id") id: Int,
         @Query("api_key") apiKey: String = API_KEY,
         @Query("language") language: String = MovieFinderApp.locale
-    ): Single<TvShowDetails>
+    ): Single<TvShowDetailsDto>
 
     @GET("movie/now_playing")
     fun getNowPlayingMovies(
@@ -50,14 +50,14 @@ interface MovieApiInterface {
         @Path("movie_id") id: Int,
         @Query("api_key") apiKey: String = API_KEY,
         @Query("language") language: String = MovieFinderApp.locale
-    ): Single<MovieDetails>
+    ): Single<MovieDetailsDto>
 
     @GET("movie/{movie_id}/credits")
     fun getMovieCredits(
         @Path("movie_id") id: Int,
         @Query("api_key") apiKey: String = API_KEY,
         @Query("language") language: String = MovieFinderApp.locale
-    ): Single<MovieCredits>
+    ): Single<MovieCreditsDto>
 
     @GET("search/movie")
     fun searchMovies(
@@ -65,4 +65,10 @@ interface MovieApiInterface {
         @Query("api_key") apiKey: String = API_KEY,
         @Query("language") language: String = MovieFinderApp.locale
     ): Single<MovieResponse>
+
+    @GET("tv/popular")
+    suspend fun getPopularShowCoroutine(
+        @Query("api_key") apiKey: String = API_KEY,
+        @Query("language") language: String = MovieFinderApp.locale
+    ): TvShowResponse
 }

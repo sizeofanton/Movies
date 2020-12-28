@@ -9,12 +9,12 @@ import ru.mikhailskiy.intensiv.data.dto.common.ProductionCompany
 import ru.mikhailskiy.intensiv.data.dto.common.ProductionCountry
 import ru.mikhailskiy.intensiv.data.dto.common.SpokenLanguage
 
-data class MovieDetails(
+data class MovieDetailsDto(
     val adult: Boolean,
     @SerializedName("backdrop_path")
     override val backdropPath: String,
     @SerializedName("belongs_to_collection")
-    val belongsToCollection: List<MovieDetails>?,
+    val belongsToCollection: List<MovieDetailsDto>?,
     val budget: Int,
     val genres: List<Genre>,
     val homepage: String?,

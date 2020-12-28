@@ -2,7 +2,7 @@ package ru.mikhailskiy.intensiv.data.dto.movie_credits
 
 import com.google.gson.annotations.SerializedName
 
-data class CastMember(
+data class CrewMemberDto(
     val adult: Boolean,
     val gender: Int?,
     val id: Int,
@@ -14,10 +14,8 @@ data class CastMember(
     val popularity: Double,
     @SerializedName("profile_path")
     val profilePath: String?,
-    @SerializedName("cast_id")
-    val castId: Int,
-    val character: String,
     @SerializedName("credit_id")
     val creditId: String,
-    val order: Int
+    val department: String,
+    val job: String
 )

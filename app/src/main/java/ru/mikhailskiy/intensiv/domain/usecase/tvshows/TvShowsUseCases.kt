@@ -16,4 +16,6 @@ class TvShowsUseCases: KoinComponent {
     fun getPopularTvShows(): Single<List<TvShow>> =
             repository.getTvShows()
 
+    suspend fun getPopularTvShowsCoroutines(): List<TvShow> = repository.getTvShowsCoroutine()
+
 }

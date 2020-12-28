@@ -12,4 +12,11 @@ class PopularTvShowRepository(): TvShowsRepository {
             .getPopularShow()
             .map { TvShowMapper.toViewObject(it.results) }
     }
+
+    override suspend fun getTvShowsCoroutine(): List<TvShow> {
+        return MovieApiClient.apiClient
+            .getPopularShowCoroutine()
+            .results
+            .map { TvShowMapper.toViewObject(it) }
+    }
 }

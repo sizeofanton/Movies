@@ -5,4 +5,5 @@ import ru.mikhailskiy.intensiv.data.vo.TvShow
 
 interface TvShowsRepository {
     fun getTvShows(): Single<List<TvShow>>
+    suspend fun getTvShowsCoroutine(): List<TvShow>
 }

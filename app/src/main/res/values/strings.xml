@@ -50,4 +50,6 @@
     <string name="mock_actor_firstname">Jason</string>
 
     <string name="title">Title</string>
+    <string name="details_loading_error">Error while loading details</string>
+    <string name="error_loading_tv_shows">Error while loading tv shows</string>
 </resources>

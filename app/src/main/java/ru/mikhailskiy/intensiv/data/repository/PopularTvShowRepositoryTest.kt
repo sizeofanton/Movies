@@ -17,4 +17,14 @@ class PopularTvShowRepositoryTest: TvShowsRepository  {
             emitter.onSuccess(list)
         }
     }
+
+    override suspend fun getTvShowsCoroutine(): List<TvShow> {
+        val list = listOf<TvShow>(
+            TvShow(id = 0, backdropUrl = "", title = "TvShow1", rating = 2.0f),
+            TvShow(id = 1, backdropUrl = "", title = "TvShow2", rating = 5.0f),
+            TvShow(id = 2, backdropUrl = "", title = "TvShow3", rating = 9.0f)
+        )
+
+        return list
+    }
 }

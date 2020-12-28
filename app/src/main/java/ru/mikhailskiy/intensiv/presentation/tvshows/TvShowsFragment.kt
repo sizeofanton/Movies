@@ -19,6 +19,7 @@ import ru.mikhailskiy.intensiv.extension.hide
 import ru.mikhailskiy.intensiv.extension.show
 import ru.mikhailskiy.intensiv.extension.showSnackbar
 import ru.mikhailskiy.intensiv.util.BundleProperties
+import ru.mikhailskiy.intensiv.util.DataLoadingStates
 
 
 @KoinApiExtension
@@ -44,7 +45,7 @@ class TvShowsFragment : Fragment() {
 
         tv_shows_recycler_view.adapter = adapter.apply { addAll(listOf()) }
 
-        viewModel.fetchTvShows()
+        viewModel.fetchTvShowsCoroutine()
         viewModel.tvShowsLiveData.observe(viewLifecycleOwner) { tvShows ->
             val items = tvShows.map {
                 TvShowItem(it) { show ->
@@ -56,14 +57,14 @@ class TvShowsFragment : Fragment() {
 
         viewModel.loadingStateLiveData.observe(viewLifecycleOwner) {
             when (it) {
-                TvShowsViewModel.DataLoadingStates.Error -> {
+                DataLoadingStates.Error -> {
                     progress_bar.hide()
-                    showSnackbar("Error message") // TODO change && to res
+                    showSnackbar(getString(R.string.error_loading_tv_shows))
                 }
-                TvShowsViewModel.DataLoadingStates.Loaded -> {
+                DataLoadingStates.Loaded -> {
                     progress_bar.hide()
                 }
-                TvShowsViewModel.DataLoadingStates.Loading -> {
+                DataLoadingStates.Loading -> {
                     progress_bar.show()
                 }
             }
